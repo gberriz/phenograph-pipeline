@@ -9,16 +9,16 @@ function [c,Q,bestpartition,bestpartitionhierarchy] = LouvainfromBin( filename, 
     % begin
     fprintf(1, 'MATLAB: calling convert:\n');
     command = [ps 'convert -i ' filename '.bin -o ' filename '_graph.bin -w ' filename '_graph.weights' ];
-    fprintf(1,'%s\n', command );
-    system( command );
+    run_command( command );
+
     % run community detection
     for iter = 1:numiters
 
         fprintf(1,'MATLAB: running community detection, ITERATION %i\n', iter );
         command = [ps 'community ' filename '_graph.bin -l -1 -v -w ' filename '_graph.weights > ' filename '.tree'];
-        fprintf( 1, '%s\n', command );
-        [~,r] = system( command );
-        fprintf(1, '\n');
+        r = run_command( command );
+        fprintf(1, '%s\n', r);
+
         try
             % find each iteration's modularity
             q = find_modularity( r );
@@ -31,8 +31,7 @@ function [c,Q,bestpartition,bestpartitionhierarchy] = LouvainfromBin( filename, 
 
         % find number of lvevls
         command = [ps 'hierarchy ' filename '.tree' ];
-        fprintf(1, '%s\n', command );
-        [~,r] = system( command );
+        r = run_command( command );
         fprintf(1, '\n' );
 
         r = strtok(r, 10);
@@ -45,8 +44,7 @@ function [c,Q,bestpartition,bestpartitionhierarchy] = LouvainfromBin( filename, 
         for level = 1:num_levels
             fprintf( 1, 'MATLAB: importing level %d\n', level );
             command = [ps 'hierarchy ' filename '.tree -l ' num2str( level ) ' > ' filename '.tmp' ];
-            fprintf(1, '%s\n', command );
-            system( command );
+            run_command( command );
             hierarchy_output = load( [filename '.tmp'] );
             c{iter,level} = hierarchy_output(:,2) + 1;
             Q{iter,level} = q(level);
@@ -96,5 +94,13 @@ function cleanup(filename)
         for j = 1:length(files{i})
             delete( files{i}(j).name )
         end
+    end
+end
+
+function output = run_command(command)
+    fprintf(1, '%s\n', command);
+    [status, output] = system(command);
+    if status ~= 0
+        error('"%s" failed with status %d:\n%s', command, status, output)
     end
 end
