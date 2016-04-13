@@ -73,14 +73,59 @@ function mappedX = fast_tsne(X, no_dims, initial_dims, perplexity, theta, alg)
     X = X * M;
 
     % Run the fast diffusion SNE implementation
-    tsne_path = which('fast_tsne');
-    tsne_path = fileparts(tsne_path);
     write_data(X, no_dims, theta, perplexity);
-    tic, system(fullfile(tsne_path,'./bh_tsne')); toc
+
+    bh_tsne_executable = find_bh_tsne();
+
+    tic
+    status = system(bh_tsne_executable);
+    toc
+    if status ~= 0
+        error('execution of %s failed', bh_tsne_executable);
+    end
+
     [mappedX, landmarks, costs] = read_data;
     landmarks = landmarks + 1;              % correct for Matlab indexing
     delete('data.dat');
     delete('result.dat');
+end
+
+
+function [] = terse_warning(varargin)
+    backtrace = warning('off', 'backtrace');
+    verbose = warning('off', 'verbose');
+    warning(varargin{:});
+    warning('backtrace', backtrace.state);
+    warning('verbose', verbose.state);
+end
+
+
+function bh_tsne_path = find_bh_tsne()
+    stack = dbstack('-completenames');
+
+    [bh_tsne_dir, ~, ~] = fileparts(stack(1).file);
+
+    make_path = @(basename) fullfile(bh_tsne_dir, basename);
+
+    default_basename = 'bh_tsne';
+
+    candidate_basenames = { default_basename, ...
+                            [default_basename '_' computer('arch')] };
+
+    for i = 1:numel(candidate_basenames)
+
+        candidate = make_path(candidate_basenames{i});
+        terse_warning('Looking for bh_tsne executable: trying %s...', ...
+                      candidate);
+
+        if exist(candidate, 'file') == 2
+            bh_tsne_path = candidate;
+            terse_warning('Success');
+            return;
+        end
+    end
+
+    error('Found no recognizable bh_tsne executable in %s', bh_tsne_dir);
 end
 
 
