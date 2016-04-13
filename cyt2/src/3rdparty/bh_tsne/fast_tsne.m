@@ -1,4 +1,4 @@
-function mapped_data = fast_tsne(data, no_dims, initial_dims, perplexity, theta)
+function mapped_data = fast_tsne(data, no_dims, initial_dims, perplexity, theta, rand_seed)
 %FAST_TSNE Runs the C++ implementation of Barnes-Hut t-SNE
 %
 %   mapped_data = fast_tsne(data, no_dims, initial_dims, perplexity, theta, alg)
@@ -80,7 +80,7 @@ function mapped_data = fast_tsne(data, no_dims, initial_dims, perplexity, theta)
     reduced_data = reduce_data(double(data), initial_dims);
 
     % Run the fast diffusion SNE implementation
-    write_data(reduced_data, no_dims, theta, perplexity);
+    write_data(reduced_data, no_dims, theta, perplexity, rand_seed);
 
     bh_tsne_executable = find_bh_tsne();
 
@@ -156,27 +156,41 @@ end
 
 
 % Writes the datafile for the fast t-SNE implementation
-function write_data(X, no_dims, theta, perplexity)
-    [n, d] = size(X);
-    h = fopen('data.dat', 'wb');
-    fwrite(h, n, 'integer*4');
-    fwrite(h, d, 'integer*4');
-    fwrite(h, theta, 'double');
-    fwrite(h, perplexity, 'double');
-    fwrite(h, no_dims, 'integer*4');
-    fwrite(h, X', 'double');
-    fclose(h);
+function write_data(data, no_dims, theta, perplexity, rand_seed)
+
+    [number_of_columns, number_of_rows] = size(data);
+
+    outstream = fopen('data.dat', 'wb');
+
+    fwrite(outstream, number_of_columns, 'integer*4');
+    fwrite(outstream, number_of_rows, 'integer*4');
+    fwrite(outstream, theta, 'double');
+    fwrite(outstream, perplexity, 'double');
+    fwrite(outstream, no_dims, 'integer*4');
+    fwrite(outstream, data', 'double');
+
+    if ~isempty(rand_seed)
+        fwrite(outstream, rand_seed, 'integer*4');
+    end
+
+    fclose(outstream);
 end
 
 
 % Reads the result file from the fast t-SNE implementation
-function [X, landmarks, costs] = read_data
-    h = fopen('result.dat', 'rb');
-    n = fread(h, 1, 'integer*4');
-    d = fread(h, 1, 'integer*4');
-    X = fread(h, n * d, 'double');
-    landmarks = fread(h, n, 'integer*4');
-    costs = fread(h, n, 'double');      % this vector contains only zeros
-    X = reshape(X, [d n])';
-    fclose(h);
+function [data, landmarks, costs] = read_data
+    instream = fopen('result.dat', 'rb');
+
+    number_of_columns = fread(instream, 1, 'integer*4');
+    number_of_rows = fread(instream, 1, 'integer*4');
+
+    number_of_elements = number_of_columns * number_of_rows;
+    shape = [number_of_rows number_of_columns];
+
+    data = reshape(fread(instream, number_of_elements, 'double'), shape)';
+
+    landmarks = fread(instream, number_of_columns, 'integer*4');
+    costs = fread(instream, number_of_columns, 'double'); % this vector contains
+                                                          % only zeros
+    fclose(instream);
 end

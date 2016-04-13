@@ -11,11 +11,22 @@ function [c,Q,bestpartition,bestpartitionhierarchy] = LouvainfromBin( filename, 
     command = [ps 'convert -i ' filename '.bin -o ' filename '_graph.bin -w ' filename '_graph.weights' ];
     run_command( command );
 
+    global PRNG_SEED;
+    have_seeded_prng = ~isempty(PRNG_SEED);
+    seedopt = '';
+
     % run community detection
     for iter = 1:numiters
 
+        if have_seeded_prng
+            seedopt = sprintf('-s %u', randi(2^32) - 1);
+        end
+
         fprintf(1,'MATLAB: running community detection, ITERATION %i\n', iter );
-        command = [ps 'community ' filename '_graph.bin -l -1 -v -w ' filename '_graph.weights > ' filename '.tree'];
+        command = sprintf(['%scommunity "%s_graph.bin" -l -1 -v ' ...
+                           '-w "%s_graph.weights" %s > "%s.tree"'], ...
+                          ps, filename, filename, seedopt, filename);
+
         r = run_command( command );
         fprintf(1, '%s\n', r);
 

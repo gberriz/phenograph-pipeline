@@ -38,6 +38,9 @@ double precision = 0.000001;
 int display_level = -2;
 int k1 = 16;
 
+bool HAVE_SEED = false;
+unsigned int SEED;
+
 bool verbose = false;
 
 void
@@ -49,6 +52,7 @@ usage(char *prog_name, const char *more) {
   cerr << "-p file\tstart the computation with a given partition instead of the trivial partition." << endl;
   cerr << "\tfile must contain lines \"node community\"." << endl;
   cerr << "-q eps\ta given pass stops when the modularity is increased by less than epsilon." << endl;
+  cerr << "-s seed\tuse seed (instead of the internally generated seed) as the argument to srand." << endl;
   cerr << "-l k\tdisplays the graph of level k rather than the hierachical structure." << endl;
   cerr << "\tif k=-1 then displays the hierarchical structure rather than the graph at a given level." << endl;
   cerr << "-v\tverbose mode: gives computation time, information about the hierarchy and modularity." << endl;
@@ -88,6 +92,11 @@ parse_args(int argc, char **argv) {
       case 'v':
 	verbose=true;
 	break;
+      case 's':
+        HAVE_SEED = true;
+	SEED = strtol(argv[i+1], (char **) NULL, 10);
+	i++;
+	break;
       default:
 	usage(argv[0], "Unknown option\n");
       }
@@ -110,9 +119,18 @@ display_time(const char *str) {
 
 int
 main(int argc, char **argv) {
-  srand(time(NULL)+getpid());
 
   parse_args(argc, argv);
+
+  if (HAVE_SEED) {
+    cerr << "Using user-supplied seed: " << SEED << "\n";
+  }
+  else {
+    SEED = (unsigned int) ( time(NULL) + getpid() );
+    cerr << "Using internally-generated seed: " << SEED << "\n";
+  }
+  srand(SEED);
+
   time_t time_begin, time_end;
   time(&time_begin);
   if (verbose)
@@ -163,4 +181,3 @@ main(int argc, char **argv) {
   }
   cerr << new_mod << endl;
 }
-
