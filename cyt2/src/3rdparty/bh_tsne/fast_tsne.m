@@ -1,10 +1,10 @@
-function mappedX = fast_tsne(X, no_dims, initial_dims, perplexity, theta, alg)
+function mapped_data = fast_tsne(data, no_dims, initial_dims, perplexity, theta)
 %FAST_TSNE Runs the C++ implementation of Barnes-Hut t-SNE
 %
-%   mappedX = fast_tsne(X, no_dims, initial_dims, perplexity, theta, alg)
+%   mapped_data = fast_tsne(data, no_dims, initial_dims, perplexity, theta, alg)
 %
 % Runs the C++ implementation of Barnes-Hut-SNE. The high-dimensional
-% datapoints are specified in the NxD matrix X. The dimensionality of the
+% datapoints are specified in the NxD matrix data. The dimensionality of the
 % datapoints is reduced to initial_dims dimensions using PCA (default = 50)
 % before t-SNE is performed. Next, t-SNE reduces the points to no_dims
 % dimensions. The perplexity of the input similarities may be specified
@@ -12,9 +12,7 @@ function mappedX = fast_tsne(X, no_dims, initial_dims, perplexity, theta, alg)
 % the trade-off parameter between speed and accuracy: theta = 0 corresponds
 % to standard, slow t-SNE, while theta = 1 makes very crude approximations.
 % Appropriate values for theta are between 0.1 and 0.7 (default = 0.5).
-% The variable alg determines the algorithm used for PCA. The default is set
-% to 'svd'. Other options are 'eig' or 'als' (see 'doc pca' for more details).
-% The function returns the two-dimensional data points in mappedX.
+% The function returns the two-dimensional data points in mapped_data.
 %
 % NOTE: The function is designed to run on large (N > 5000) data sets. It
 % may give poor performance on very small data sets (it is better to use a
@@ -62,18 +60,27 @@ function mappedX = fast_tsne(X, no_dims, initial_dims, perplexity, theta, alg)
     if ~exist('theta', 'var') || isempty(theta)
         theta = 0.5;
     end
-    if ~exist('alg', 'var') || isempty(alg)
-        alg = 'svd';
-    end
 
     % Perform the initial dimensionality reduction using PCA
-    X = double(X);
-    X = bsxfun(@minus, X, mean(X, 1));
-    M = pca(X,'NumComponents',initial_dims,'Algorithm',alg);
-    X = X * M;
+
+    % X = double(X);
+    % X = bsxfun(@minus, X, mean(X, 1));
+
+    % covX = X' * X;
+    % [M, lambda] = eig(covX);
+    % [~, ind] = sort(diag(lambda), 'descend');
+    % if initial_dims > size(M, 2)
+    %     initial_dims = size(M, 2);
+    % end
+    % M = M(:,ind(1:initial_dims));
+
+    % X = X * M;
+    % clear covX M lambda
+
+    reduced_data = reduce_data(double(data), initial_dims);
 
     % Run the fast diffusion SNE implementation
-    write_data(X, no_dims, theta, perplexity);
+    write_data(reduced_data, no_dims, theta, perplexity);
 
     bh_tsne_executable = find_bh_tsne();
 
@@ -84,10 +91,29 @@ function mappedX = fast_tsne(X, no_dims, initial_dims, perplexity, theta, alg)
         error('execution of %s failed', bh_tsne_executable);
     end
 
-    [mappedX, landmarks, costs] = read_data;
-    landmarks = landmarks + 1;              % correct for Matlab indexing
-    delete('data.dat');
+    [mapped_data, ~, ~] = read_data;
+
+    % landmarks = landmarks + 1;              % correct for Matlab indexing
+    % delete('data.dat');
     delete('result.dat');
+end
+
+
+function reduced_data = reduce_data(data, dims)
+    centered_data = bsxfun(@minus, data, mean(data, 1));
+
+    covariance_matrix = centered_data' * centered_data;
+    [change_of_basis_matrix, eigenvalues] = eig(covariance_matrix);
+    new_dims = min(dims, size(change_of_basis_matrix, 2));
+
+    [~, indices] = sort(diag(eigenvalues), 'descend');
+
+    principal_components_matrix = change_of_basis_matrix(:, indices(1:new_dims));
+    reduced_data = centered_data * principal_components_matrix;
+
+    global INITIALDIMS;
+    INITIALDIMS = new_dims;
+    terse_warning('INITIALDIMS = %d', INITIALDIMS);
 end
 
 
