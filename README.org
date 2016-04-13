@@ -1,0 +1,47 @@
+* main changes
+
+** fast_tsne
+
+   - now has signature
+
+     fast_tsne(data, no_dims, initial_dims, perplexity, theta, rand_seed)
+
+   - expects to be able to call a version of bh_tsne that supports
+     no_dims (see bh_tsne compilation section below)
+
+** includes support for PRNG seeding
+
+* required compilation
+
+** phenograph
+
+   #+begin_src sh
+   % cd cyt2/src/3rdparty/jacob/PhenoGraph/Louvain
+   % make clean
+   % make all
+   #+end_src
+
+** bh_tsne
+
+    - clone lvdmaaten/bhtsne
+
+   #+begin_src sh
+    % git clone https://github.com/lvdmaaten/bhtsne
+   #+end_src
+
+    - follow instructions in bhtsne/README.md for compiling bh_tsne
+
+    - the resulting executable *must* be called either of the following
+
+      - bh_tsne
+
+      - bh_tsne_<ARCH>
+
+      ...where `<ARCH>` is the string returned by the MATLAB
+      expression `computer('arch')` for your system.
+
+    - place executable in the directory
+
+   #+begin_src sh
+      cyt2/src/3rdparty/bhtsne/
+   #+end_src
