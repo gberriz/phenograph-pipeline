@@ -26,7 +26,7 @@ function C = countmember(A,B)
 % 1.2 (dec 2008) - added comments, fixed some spelling and grammar
 %    mistakes, after being selected as Pick of the Week (dec 2008)
 
-error(nargchk(2,2,nargin)) ;
+narginchk(2, 2);
 
 if ~isequal(class(A),class(B)),
     error('Both inputs should be the same class.') ;
