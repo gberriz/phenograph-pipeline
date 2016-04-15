@@ -14,4 +14,5 @@ function data = mynormalize(data, percentile, varargin)
     data(data > 1) = 1;
     data(data < 0) = 0;
     data(isinf(data)) = 0;
+    data(isnan(data)) = 0;
 end
