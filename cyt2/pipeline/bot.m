@@ -447,7 +447,8 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
 
             % -----------------------------------------------------------------
             % save_to_tsv(outputpath, normalized_subtable);
-            save_to_tsv(outputpath, normalized_subtable(:, [channel_columns 'percentage' 'cluster']));
+            wanted_columns = [channel_columns 'percentage' 'cluster'];
+            save_to_tsv(outputpath, normalized_subtable(:, wanted_columns));
 
             % save_to_csv(outputpath, normalized_subtable);
 
