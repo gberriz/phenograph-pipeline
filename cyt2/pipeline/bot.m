@@ -132,24 +132,25 @@ function mapper = make_mapper(block_sizes, block_values)
 end
 
 % -----------------------------------------------------------------------------
-% channels, gates, tsne and phenograph tables
+% channels, sources, tsne and phenograph tables
 
 function channels_table = make_channels_table(data, channel_names)
     channel_columns = make_valid_names(channel_names);
     channels_table = array_to_table(data, channel_columns);
 end
 
-function gates_table = make_gates_table(block_sizes, sample_indices)
+function sources_table = make_sources_table(block_sizes, sample_indices)
     block_indices = 1:numel(block_sizes);
     % letters = 'A':'Z';
     % block_values = letters(block_indices);
 
-    observation_index_to_gate_index = make_mapper(block_sizes, block_indices);
+    observation_index_to_source_index = make_mapper(block_sizes, block_indices);
 
-    gate_indices = arrayfun(@(i) observation_index_to_gate_index(i), ...
+    source_indices = arrayfun(@(i) observation_index_to_source_index(i), ...
                             sample_indices);
 
-    gates_table = table(categorical(gate_indices), 'VariableNames', {'gate'});
+    sources_table = table(categorical(source_indices), ...
+                          'VariableNames', {'source'});
 end
 
 function tsne_table = run_tsne(data)
@@ -334,9 +335,9 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
     % -------------------------------------------------------------------------
     [all_data, block_sizes, channel_names] = read_files(files);
 
-    number_of_gates = numel(files);
-    sample_size = 11 * number_of_gates;
-    % sample_size = 100 * number_of_gates;
+    number_of_sources = numel(files);
+    sample_size = 11 * number_of_sources;
+    % sample_size = 100 * number_of_sources;
     % sample_size = 100000;
     number_of_observations = size(all_data, 1);
 
@@ -352,20 +353,20 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
     % -------------------------------------------------------------------------
     channels_table = make_channels_table(sample, channel_names);
 
-    gates_table = make_gates_table(block_sizes, sample_indices);
+    sources_table = make_sources_table(block_sizes, sample_indices);
 
     tsne_table = run_tsne(sample);
 
     phenograph_table = run_phenograph(sample);
 
-    results_table = [gates_table phenograph_table channels_table tsne_table];
+    results_table = [sources_table phenograph_table channels_table tsne_table];
 
     % -------------------------------------------------------------------------
     channel_columns = channels_table.Properties.VariableNames;
 
     function means_table = cluster_means(table_)
         stat = 'mean';
-        keyvars = {'gate', 'cluster'};
+        keyvars = {'source', 'cluster'};
 
         temp_table = grpstats(table_, keyvars, stat);
         temp_table.Properties.RowNames = {};
@@ -434,10 +435,10 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
 
         subpath = fullfile(outputdir, subdir);
 
-        for i = categorical(1:number_of_gates)
+        for i = categorical(1:number_of_sources)
 
-            subtable = table_(table_.gate == i, :);
-            subtable.gate = [];
+            subtable = table_(table_.source == i, :);
+            subtable.source = [];
             normalized_subtable = normalize_table(subtable);
 
             % -----------------------------------------------------------------
