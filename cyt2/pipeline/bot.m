@@ -195,7 +195,7 @@ end
 function normalized = normalize_(data, dimension)
     dimensionality = ndims(data);
 
-    if ~exist('dimension', 'var') || isempty(dimension)
+    if ~exist('dimension', 'var')
         normalized = normalize_(data, dimensionality);
         return;
     end
