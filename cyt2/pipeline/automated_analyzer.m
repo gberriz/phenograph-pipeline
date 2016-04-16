@@ -18,11 +18,21 @@
 function automated_analyzer
     tic;
 
+    global DEBUG_REPRODUCIBILITY;
     global PRNG_SEED;
-    clear('global PRNG_SEED');
-
-    % comment out the following line to disable PRNG seeding
-    PRNG_SEED = 1;
+    if DEBUG_REPRODUCIBILITY
+        if isempty(PRNG_SEED)
+            global DEFAULT_PRNG_SEED;
+            if isempty(DEFAULT_PRNG_SEED)
+                error('no PRNG seed available');
+            else
+                PRNG_SEED=DEFAULT_PRNG_SEED;
+            end
+        end
+        warning('PRNG_SEED: %d', PRNG_SEED);
+    else
+        clear('global PRNG_SEED');
+    end
 
     if ~isempty(PRNG_SEED)
         matlab_seed = PRNG_SEED;
@@ -31,6 +41,12 @@ function automated_analyzer
 
     global OUTPUTDIR;
     OUTPUTDIR = fullfile(tempdir, 'reverse_engineer_cyt', 'cmp', 'aut');
+    if DEBUG_REPRODUCIBILITY
+        global CMPDIR;
+        assert(~isempty(CMPDIR));
+        OUTPUTDIR = fullfile(CMPDIR, 'aut');
+    end
+
     maybe_create_dir(fullfile(OUTPUTDIR, 'full'));
     maybe_create_dir(fullfile(OUTPUTDIR, 'truncated'));
 
@@ -98,7 +114,11 @@ function automated_analyzer
 
     sample_size = 100000;
 
-    files = files([1 2 21 22]);
+    if DEBUG_REPRODUCIBILITY
+        global FCS_FILES;
+        files = reshape(FCS_FILES, 1, []);
+    end
+
     % sample_size = 11 * numel(files);
     sample_size = 100 * numel(files);
 

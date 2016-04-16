@@ -85,8 +85,12 @@ end
 % sampling
 
 function sample = random_sample(k, n)
-    sample = to_column(randsample(1:n, k));
-    % sample = partial_fisher_yates(k, n);
+    global DEBUG_REPRODUCIBILITY
+    if ~isempty(DEBUG_REPRODUCIBILITY) && DEBUG_REPRODUCIBILITY
+        sample = to_column(randsample(1:n, k));
+    else
+        sample = partial_fisher_yates(k, n);
+    end
 end
 
 function sample = partial_fisher_yates(k, n)
@@ -309,12 +313,21 @@ end
 
 function [] = run_pipeline(inputdir, outputdir, savesession)
 
-
+    global DEBUG_REPRODUCIBILITY;
     global PRNG_SEED;
-    clear('global PRNG_SEED');
-
-    % comment out the following line to disable PRNG seeding
-    PRNG_SEED = 1;
+    if DEBUG_REPRODUCIBILITY
+        if isempty(PRNG_SEED)
+            global DEFAULT_PRNG_SEED;
+            if isempty(DEFAULT_PRNG_SEED)
+                error('no PRNG seed available');
+            else
+                PRNG_SEED=DEFAULT_PRNG_SEED;
+            end
+        end
+        terse_warning('PRNG_SEED: %d', PRNG_SEED);
+    else
+        clear('global PRNG_SEED');
+    end
 
     if ~isempty(PRNG_SEED)
         matlab_seed = PRNG_SEED;
@@ -329,6 +342,14 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
 
     files = cellfun(@(r) fullfile(inputdir, r), relative_paths, ...
                     'UniformOutput', false);
+
+    if DEBUG_REPRODUCIBILITY
+        global FCS_FILES;
+        FCS_FILES = files;
+
+        global CMPDIR;
+        CMPDIR = fileparts(outputdir);
+    end
 
     % -------------------------------------------------------------------------
     [all_data, block_sizes, channel_names] = read_files(files);
