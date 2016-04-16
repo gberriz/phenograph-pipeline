@@ -12,5 +12,7 @@ addpath(fullfile(THISDIR, 'pipeline'));
 clear('THISDIR');
 % -----------------------------------------------------------------------------
 
+global DEBUG_REPRODUCIBILITY;
+
 global DEFAULT_PRNG_SEED
 DEFAULT_PRNG_SEED = 1;
