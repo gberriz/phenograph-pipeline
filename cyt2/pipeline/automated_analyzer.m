@@ -225,6 +225,8 @@ function automated_analyzer
         SESSIONFILE = fullfile(OUTPUTDIR, 'matlab_session.mat');
         save(SESSIONFILE, '-v7.3');
     end
+
+    toc
 end
 
 function channel_names=get_channelnames_from_header(fcshdr)
