@@ -309,8 +309,6 @@ end
 
 function [] = run_pipeline(inputdir, outputdir, savesession)
 
-    global DEBUG_RANDOM;
-    DEBUG_RANDOM = false;
 
     global PRNG_SEED;
     clear('global PRNG_SEED');

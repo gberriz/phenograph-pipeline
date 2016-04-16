@@ -17,8 +17,6 @@
 
 function automated_analyzer
     tic;
-    global DEBUG_RANDOM;
-    DEBUG_RANDOM = false;
 
     global PRNG_SEED;
     clear('global PRNG_SEED');
