@@ -425,6 +425,11 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
             temp_table.Properties.VariableNames{new_name} = old_name;
         end
 
+        if DEBUG_REPRODUCIBILITY
+            means_table = sortrows(temp_table, 'cluster', 'ascend');
+            return;
+        end
+
         % ---------------------------------------------------------------------
         % sort table descendingly by the mean signal across all the channels
         temp_table.mean_signal = ...
