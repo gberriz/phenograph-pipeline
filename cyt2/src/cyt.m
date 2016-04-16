@@ -4741,6 +4741,7 @@ function cmiSubsample_Callback(isSubsampleEach)
             global PRNG_SEED;
             rng(PRNG_SEED);
             rand_sample = sort(randsample(gateContext, min(sample_size, length(gateContext))));
+            save_sample(rand_sample);
         else
             rand_sample = randsample(gateContext, min(sample_size, length(gateContext)));
         end
@@ -5873,3 +5874,10 @@ function openEndedAction
     %      end
 end
 
+function [] = save_sample(rand_sample)
+    global DIAGNOSTICS_DIR;
+    rand_sample_file = fullfile(DIAGNOSTICS_DIR, 'rand_sample.tsv');
+    fid = fopen(rand_sample_file, 'w');
+    fprintf(fid, '%d\n', rand_sample);
+    fclose(fid);
+end
