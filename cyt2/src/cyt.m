@@ -4735,8 +4735,16 @@ function cmiSubsample_Callback(isSubsampleEach)
 %             set(handles.lstGates, 'String', gates(:, 1));
 %             set(handles.lstIntGates, 'String', gates(:, 1));
         end
-    else 
-        rand_sample = randsample(gateContext, min(sample_size, length(gateContext)));
+    else
+        global DEBUG_REPRODUCIBILITY;
+        if DEBUG_REPRODUCIBILITY
+            global PRNG_SEED;
+            rng(PRNG_SEED);
+            rand_sample = sort(randsample(gateContext, min(sample_size, length(gateContext))));
+        else
+            rand_sample = randsample(gateContext, min(sample_size, length(gateContext)));
+        end
+
         createNewGate(rand_sample, retr('channelNames'));
 
         gates = retr('gates');
