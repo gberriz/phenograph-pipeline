@@ -11,6 +11,10 @@
 
 ** includes support for PRNG seeding
 
+** new pipeline directory
+   contains automated_analyzer.m, bot.m, and supporting files
+
+
 * required compilation
 
 ** phenograph
@@ -45,3 +49,12 @@
    #+begin_src sh
       cyt2/src/3rdparty/bhtsne/
    #+end_src
+
+* setup
+
+  After adding the cyt2 subdirectory to the MATLAB path, run the
+  command `setup`.  This command:
+
+  1. updates the MATLAB path to include all cyt2 directories,
+     including our pipeline directory;
+  2. initializes some global variables.
