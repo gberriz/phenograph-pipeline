@@ -2005,7 +2005,7 @@ function plot_sample_clusters(cluster_channel)
     elseif strcmp(plot_type,'tSNE map')
         
         if length(gate_context) > 10000,
-            inds = randsample(gate_context,10000);    %subsample if gate context is larger than 10,000
+            inds = unseeded_randsample(gate_context,10000);    %subsample if gate context is larger than 10,000
         else
             inds = gate_context;
         end
@@ -3000,7 +3000,7 @@ function hPlot=plotScatter
                 vZ = sessionData(aggregateinds, nCH3);
             else
                 if get(handles.chkRandomLayers, 'Value')
-                    vZ = rand(1, numel(vX))*10;
+                    vZ = unseeded_rand(1, numel(vX))*10;
                 else
                     vZ = vColor;
                 end
@@ -3062,7 +3062,7 @@ function hPlot=plotScatter
                 if (nSelChannels == 3)
                     vZ = sessionData(gateContext, nCH3);
                 else
-                    vZ = rand(1, numel(vX))*(clim(2)-clim(1))+clim(1);
+                    vZ = unseeded_rand(1, numel(vX))*(clim(2)-clim(1))+clim(1);
                 end
 
                 
@@ -3086,7 +3086,7 @@ function hPlot=plotScatter
                     vZ = sessionData(gateContext, nCH3);
                 else
                     if get(handles.chkRandomLayers, 'Value')
-                        vZ = rand(1, numel(vX))*10;
+                        vZ = unseeded_rand(1, numel(vX))*10;
                     else
                         vZ = vColor;
                     end
@@ -3865,7 +3865,7 @@ function runAffinityPropegation
     figure; % Make a figures showing the data and the clusters
     for i=unique(IDX)'
       ii=find(IDX==i); h=plot(x(ii,1),x(ii,2),'o'); hold on;
-      col=rand(1,3); set(h,'Color',col,'MarkerFaceColor',col);
+      col=unseeded_rand(1,3); set(h,'Color',col,'MarkerFaceColor',col);
       xi1=x(i,1)*ones(size(ii)); xi2=x(i,2)*ones(size(ii)); 
       line([x(ii,1),xi1]',[x(ii,2),xi2]','Color',col);
     end;
@@ -4725,7 +4725,7 @@ function cmiSubsample_Callback(isSubsampleEach)
         
         for i=selected_gates
             gateInds = intersect(gates{i, 2}, gateContext);
-            rand_sample = randsample(gateInds, min(sample_size, length(gateInds)));
+            rand_sample = unseeded_randsample(gateInds, min(sample_size, length(gateInds)));
             gate_channel_names = gates{i, 3};
             if numel(channel_names) > numel(gate_channel_names)
                 gate_channel_names = channel_names;
@@ -4743,7 +4743,7 @@ function cmiSubsample_Callback(isSubsampleEach)
             rand_sample = sort(randsample(gateContext, min(sample_size, length(gateContext))));
             save_sample(rand_sample);
         else
-            rand_sample = randsample(gateContext, min(sample_size, length(gateContext)));
+            rand_sample = unseeded_randsample(gateContext, min(sample_size, length(gateContext)));
         end
 
         createNewGate(rand_sample, retr('channelNames'));
@@ -5174,9 +5174,9 @@ selected_gates = get(handles.lstGates, 'Value');
 subsample_size = 6000;
 
 % uniquely subsample 3 times the size of subsample_size/2
-sample1 = randsample(gateContext, subsample_size/2);
-sample2 = randsample(setdiff(gateContext, sample1), subsample_size/2);
-sample_shared = randsample(setdiff(gateContext, union(sample1, sample2)), subsample_size/2);
+sample1 = unseeded_randsample(gateContext, subsample_size/2);
+sample2 = unseeded_randsample(setdiff(gateContext, sample1), subsample_size/2);
+sample_shared = unseeded_randsample(setdiff(gateContext, union(sample1, sample2)), subsample_size/2);
 createNewGate(sample1       , channel_names, {'sample1'});
 createNewGate(sample2       , channel_names, {'sample2'});
 createNewGate(sample_shared , channel_names, {'sample_shared'});
@@ -5775,7 +5775,7 @@ function compareMaps
     channel_names = retr('channelNames');
 
     map_compareGUI('session_data',...
-                    session_data(randsample(gate_context, min(6000, length(gate_context))),:),...
+                    session_data(unseeded_randsample(gate_context, min(6000, length(gate_context))),:),...
                     'channelNames',channel_names)
 end
 
@@ -5880,4 +5880,34 @@ function [] = save_sample(rand_sample)
     fid = fopen(rand_sample_file, 'w');
     fprintf(fid, '%d\n', rand_sample);
     fclose(fid);
+end
+
+function result = unseeded_rand(varargin)
+    global DEBUG_REPRODUCIBILITY;
+    if DEBUG_REPRODUCIBILITY
+        stack = dbstack('-completenames');
+        name = stack(2).name;
+        line_ = stack(2).line;
+        terse_warning('unseeded rand call from %s, line %d', name, line_);
+    end
+    result = rand(varargin{:});
+end
+
+function result = unseeded_randsample(varargin)
+    global DEBUG_REPRODUCIBILITY;
+    if DEBUG_REPRODUCIBILITY
+        stack = dbstack('-completenames');
+        name = stack(2).name;
+        line_ = stack(2).line;
+        terse_warning('unseeded randsample call from %s, line %d', name, line_);
+    end
+    result = sort(randsample(varargin{:}));
+end
+
+function [] = terse_warning(varargin)
+    backtrace = warning('off', 'backtrace');
+    verbose = warning('off', 'verbose');
+    warning(varargin{:});
+    warning('backtrace', backtrace.state);
+    warning('verbose', verbose.state);
 end
