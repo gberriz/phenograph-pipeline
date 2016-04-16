@@ -1,7 +1,7 @@
 function mapped_data = fast_tsne(data, no_dims, initial_dims, perplexity, theta, rand_seed)
 %FAST_TSNE Runs the C++ implementation of Barnes-Hut t-SNE
 %
-%   mapped_data = fast_tsne(data, no_dims, initial_dims, perplexity, theta, alg)
+%   mapped_data = fast_tsne(data, no_dims, initial_dims, perplexity, theta, rand_seed)
 %
 % Runs the C++ implementation of Barnes-Hut-SNE. The high-dimensional
 % datapoints are specified in the NxD matrix data. The dimensionality of the
@@ -13,6 +13,9 @@ function mapped_data = fast_tsne(data, no_dims, initial_dims, perplexity, theta,
 % to standard, slow t-SNE, while theta = 1 makes very crude approximations.
 % Appropriate values for theta are between 0.1 and 0.7 (default = 0.5).
 % The function returns the two-dimensional data points in mapped_data.
+%
+% The optional parameter rand_seed, when present, is passed to the bh_tsne
+% program, which uses it to seed its random-number generator.
 %
 % NOTE: The function is designed to run on large (N > 5000) data sets. It
 % may give poor performance on very small data sets (it is better to use a
