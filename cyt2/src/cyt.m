@@ -3533,8 +3533,12 @@ function runTSNE(normalize)
     tic;
     data = sessionData(gate_context, selected_channels);
             
+    % -------------------------------------------------------------------------
+    initial_dims = 110; % from the cyt code
+    perplexity = min(30, (size(data, 1) - 1)/3);
+
     try
-        map = fast_tsne(data, 110);
+        map = fast_tsne(data, [], initial_dims, perplexity);
     catch 
         msgbox(...
                 ['tSNE Failed: Common causes are \n' ...
@@ -3544,6 +3548,8 @@ function runTSNE(normalize)
                'Error','error');  
         return;        
     end
+
+    % -------------------------------------------------------------------------
 
     disp(sprintf('map generated in %g m', toc/60));
     setStatus('Done tSNE calc. Setting results to gates');
