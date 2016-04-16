@@ -117,10 +117,10 @@ function automated_analyzer
     if DEBUG_REPRODUCIBILITY
         global FCS_FILES;
         files = reshape(FCS_FILES, 1, []);
-    end
 
-    % sample_size = 11 * numel(files);
-    sample_size = 100 * numel(files);
+        global SAMPLE_SIZE;
+        sample_size = SAMPLE_SIZE;
+    end
 
     for i=1:numel(files)
         [~,name,~] = fileparts(char(files(i)));

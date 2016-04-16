@@ -318,6 +318,7 @@ end
 
 function [] = run_pipeline(inputdir, outputdir, savesession)
 
+    global DEV_MODE;
     global DEBUG_REPRODUCIBILITY;
     global PRNG_SEED;
     if DEBUG_REPRODUCIBILITY
@@ -342,8 +343,10 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
     % -------------------------------------------------------------------------
 
     relative_paths = get_files(inputdir);
-    % relative_paths = relative_paths([1 2 21 22]);
-    relative_paths = relative_paths([1 21]);
+    if DEV_MODE
+        relative_paths = relative_paths([1 2 21 22]);
+        % relative_paths = relative_paths([1 21]);
+    end
 
     files = cellfun(@(r) fullfile(inputdir, r), relative_paths, ...
                     'UniformOutput', false);
@@ -359,11 +362,20 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
     % -------------------------------------------------------------------------
     [all_data, block_sizes, channel_names] = read_files(files);
 
-    number_of_sources = numel(files);
-    sample_size = 11 * number_of_sources;
-    % sample_size = 100 * number_of_sources;
-    % sample_size = 100000;
     number_of_observations = size(all_data, 1);
+    number_of_sources = numel(files);
+
+    if DEV_MODE
+        % sample_size = 11 * number_of_sources;
+        sample_size = 100 * number_of_sources;
+    else
+        sample_size = 100000;
+    end
+
+    if DEBUG_REPRODUCIBILITY
+        global SAMPLE_SIZE;
+        SAMPLE_SIZE = sample_size;
+    end
 
     if sample_size > number_of_observations
         error('sample size exceeds number of observations');
