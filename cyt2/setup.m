@@ -13,6 +13,7 @@ clear('THISDIR');
 % -----------------------------------------------------------------------------
 
 global DEBUG_REPRODUCIBILITY;
+global DEV_MODE;
 
 global DEFAULT_PRNG_SEED
 DEFAULT_PRNG_SEED = 1;
