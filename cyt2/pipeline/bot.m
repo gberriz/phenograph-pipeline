@@ -54,15 +54,21 @@ function [data, block_sizes, channel_names] = read_files(files)
 
     parameters = cellfun(@(s) s.par, metadatacell, 'UniformOutput', false);
 
-    all_channel_names = cellfun(@(p) {p.name}, parameters, ...
-                                'UniformOutput', false);
+    function names = get_channel_names(parameter)
+        raw_names = cellfun(@char, [{parameter.name}; {parameter.name2}], ...
+                            'UniformOutput', false);
 
-    channel_names = all_channel_names{1};
+        function name = get_channel_name(pair)
+            names = unique(pair(~strcmp(pair, '')));
+            name = strjoin(names, '__');
+        end
 
-    if ~isequal(all_channel_names{:})
-        terse_warning('inconsistent channel names across input files');
+        names = cellfun(@get_channel_name, num2cell(raw_names, 1), ...
+                        'UniformOutput', false);
     end
 
+    channel_names = cellfun(@get_channel_names, parameters, ...
+                            'UniformOutput', false);
 end
 
 % -----------------------------------------------------------------------------
@@ -138,8 +144,11 @@ end
 % -----------------------------------------------------------------------------
 % channels, sources, tsne and phenograph tables
 
-function channels_table = make_channels_table(data, channel_names)
-    channel_columns = make_valid_names(channel_names);
+function channels_table = make_channels_table(data)
+    width = size(data, 2);
+    format = sprintf('ch%%0%dd', floor(log10(width)) + 1);
+    channel_columns = arrayfun(@(i) sprintf(format, i), 1:width, ...
+                               'UniformOutput', false);
     channels_table = array_to_table(data, channel_columns);
 end
 
@@ -387,7 +396,7 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
     clear('all_data');
 
     % -------------------------------------------------------------------------
-    channels_table = make_channels_table(sample, channel_names);
+    channels_table = make_channels_table(sample);
 
     sources_table = make_sources_table(block_sizes, sample_indices);
 
@@ -467,6 +476,15 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
 
     end
 
+    function renamed_table = rename_channel_columns(table, channel_names_i)
+        old_names = channels_table.Properties.VariableNames;
+        new_names = make_valid_names(channel_names_i);
+        renamed_table = table;
+        for i = 1:numel(new_names)
+            renamed_table.Properties.VariableNames{old_names{i}} = new_names{i};
+        end
+    end
+
     function [] = save_normalized_tables(subdir, table_)
 
         subpath = fullfile(outputdir, subdir);
@@ -482,12 +500,18 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
             outputpath = fullfile(subpath, relative_path);
 
             % -----------------------------------------------------------------
-            % save_to_tsv(outputpath, normalized_subtable);
-            wanted_columns = [channel_columns 'percentage' 'cluster'];
-            save_to_tsv(outputpath, normalized_subtable(:, wanted_columns));
+            if DEBUG_REPRODUCIBILITY
+                subtable_to_save = normalized_subtable;
+                wanted_columns = [channel_columns 'percentage' 'cluster'];
+            else
+                subtable_to_save = ...
+                    rename_channel_columns(normalized_subtable, ...
+                                           channel_names{i});
+                wanted_columns = ['cluster' 'percentage' channel_columns ...
+                                  tsne_table.Properties.VariableNames];
+            end
 
-            % save_to_csv(outputpath, normalized_subtable);
-
+            save_to_tsv(outputpath, subtable_to_save(:, wanted_columns));
         end
 
     end

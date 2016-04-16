@@ -229,6 +229,16 @@ end
 
 function channel_names=get_channelnames_from_header(fcshdr)
     channel_names1 = {fcshdr.par.name};
+    global DEBUG_REPRODUCIBILITY;
+    if DEBUG_REPRODUCIBILITY
+        number_of_channels = numel(channel_names1);
+        format = sprintf('ch%%0%dd', floor(log10(number_of_channels)) + 1);
+        channel_names = arrayfun(@(i) sprintf(format, i), ...
+                                 1:number_of_channels, ...
+                                 'UniformOutput', false);
+        return;
+    end
+
     channel_names2 = {fcshdr.par.name2};
 	if (strcmp(channel_names1,channel_names2)==0)
         channel_names = combineNames(channel_names1,channel_names2);
