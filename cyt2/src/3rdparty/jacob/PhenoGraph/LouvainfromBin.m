@@ -11,8 +11,17 @@ function [c,Q,bestpartition,bestpartitionhierarchy] = LouvainfromBin( filename, 
     command = [ps 'convert -i ' filename '.bin -o ' filename '_graph.bin -w ' filename '_graph.weights' ];
     run_command( command );
 
-    global PRNG_SEED;
-    have_seeded_prng = ~isempty(PRNG_SEED);
+    global DEBUG_REPRODUCIBILITY;
+    if DEBUG_REPRODUCIBILITY
+        global PRNG_SEED;
+        global PHENOGRAPH_PRNG_SEED_OFFSET;
+        rand_seed = PRNG_SEED + PHENOGRAPH_PRNG_SEED_OFFSET;
+        rng(rand_seed);
+        have_seeded_prng = true;
+    else
+        have_seeded_prng = false;
+    end
+
     seedopt = '';
 
     % run community detection

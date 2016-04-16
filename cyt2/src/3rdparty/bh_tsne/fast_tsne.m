@@ -1,7 +1,7 @@
-function mapped_data = fast_tsne(data, no_dims, initial_dims, perplexity, theta, rand_seed)
+function mapped_data = fast_tsne(data, no_dims, initial_dims, perplexity, theta)
 %FAST_TSNE Runs the C++ implementation of Barnes-Hut t-SNE
 %
-%   mapped_data = fast_tsne(data, no_dims, initial_dims, perplexity, theta, rand_seed)
+%   mapped_data = fast_tsne(data, no_dims, initial_dims, perplexity, theta)
 %
 % Runs the C++ implementation of Barnes-Hut-SNE. The high-dimensional
 % datapoints are specified in the NxD matrix data. The dimensionality of the
@@ -13,9 +13,6 @@ function mapped_data = fast_tsne(data, no_dims, initial_dims, perplexity, theta,
 % to standard, slow t-SNE, while theta = 1 makes very crude approximations.
 % Appropriate values for theta are between 0.1 and 0.7 (default = 0.5).
 % The function returns the two-dimensional data points in mapped_data.
-%
-% The optional parameter rand_seed, when present, is passed to the bh_tsne
-% program, which uses it to seed its random-number generator.
 %
 % NOTE: The function is designed to run on large (N > 5000) data sets. It
 % may give poor performance on very small data sets (it is better to use a
@@ -83,7 +80,15 @@ function mapped_data = fast_tsne(data, no_dims, initial_dims, perplexity, theta,
     reduced_data = reduce_data(double(data), initial_dims);
 
     % Run the fast diffusion SNE implementation
-    write_data(reduced_data, no_dims, theta, perplexity, rand_seed);
+    global DEBUG_REPRODUCIBILITY;
+    if DEBUG_REPRODUCIBILITY
+        global PRNG_SEED;
+        global TSNE_PRNG_SEED_OFFSET;
+        rand_seed = PRNG_SEED + TSNE_PRNG_SEED_OFFSET;
+        write_data(reduced_data, no_dims, theta, perplexity, rand_seed);
+    else
+        write_data(reduced_data, no_dims, theta, perplexity);
+    end
 
     bh_tsne_executable = find_bh_tsne();
 

@@ -178,14 +178,11 @@ function tsne_table = run_tsne(data)
 
     % -------------------------------------------------------------------------
 
-    global PRNG_SEED;
-    tsne_seed = PRNG_SEED;
-
     initial_dims = 110; % taken from the cyt code; I don't know why they
                         % chose this value
     perplexity = min(30, (size(data, 1) - 1)/3);
 
-    tsne_mapping = fast_tsne(data, [], initial_dims, perplexity, [], tsne_seed);
+    tsne_mapping = fast_tsne(data, [], initial_dims, perplexity);
 
     % -------------------------------------------------------------------------
     variable_names = arrayfun(@(i) sprintf('bh_SNE%d', i), ...
@@ -344,11 +341,6 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
         clear('global PRNG_SEED');
     end
 
-    if ~isempty(PRNG_SEED)
-        matlab_seed = PRNG_SEED;
-        rng(matlab_seed);
-    end
-
     % -------------------------------------------------------------------------
 
     relative_paths = get_files(inputdir);
@@ -390,7 +382,16 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
         error('sample size exceeds number of observations');
     end
 
-    sample_indices = sort(random_sample(sample_size, number_of_observations));
+    global DEBUG_REPRODUCIBILITY;
+    if DEBUG_REPRODUCIBILITY
+        global PRNG_SEED;
+        global RANDSAMPLE_PRNG_SEED_OFFSET;
+        rng(PRNG_SEED + RANDSAMPLE_PRNG_SEED_OFFSET);
+        sample_indices = sort(random_sample(sample_size, ...
+                                            number_of_observations));
+    else
+        sample_indices = random_sample(sample_size, number_of_observations);
+    end
 
     sample = all_data(sample_indices, :);
     clear('all_data');

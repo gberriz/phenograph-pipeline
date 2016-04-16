@@ -193,7 +193,17 @@ function automated_analyzer
     global original_number_of_channels;
     original_number_of_channels = numel(channel_names);
 
-    rand_sample = sort(randsample(gate_indices, min(sample_size, length(gate_indices))));
+    global DEBUG_REPRODUCIBILITY;
+    if DEBUG_REPRODUCIBILITY
+        global PRNG_SEED;
+        global RANDSAMPLE_PRNG_SEED_OFFSET;
+        rng(PRNG_SEED + RANDSAMPLE_PRNG_SEED_OFFSET);
+        rand_sample = sort(randsample(gate_indices, ...
+                                      min(sample_size, length(gate_indices))));
+    else
+        rand_sample = randsample(gate_indices, ...
+                                 min(sample_size, length(gate_indices)));
+    end
 
     createNewGate(rand_sample, channel_names, {'sample_all'});
 
@@ -393,13 +403,10 @@ function runTSNE(normalize)
 
     data = sessionData(gate_context, selected_channels);
 
-    global PRNG_SEED;
-    tsne_seed = PRNG_SEED;
-
     initial_dims = 110; % from the cyt code
     perplexity = min(30, (size(data, 1) - 1)/3);
 
-    map = fast_tsne(data, [], initial_dims, perplexity, [], tsne_seed);
+    map = fast_tsne(data, [], initial_dims, perplexity);
 
     disp(sprintf('map generated in %g m', toc/60));
 
