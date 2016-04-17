@@ -12,13 +12,29 @@ function [] = bot(inputdir, outputdir, savesession)
 %
 %    BOT(INPUTDIR, OUTPUTDIR, true), in addition, results in having the current
 %    MATLAB session saved in the file matlab_session.mat, under OUTPUTDIR.
+%
+%    After calling either one of the forms of BOT shown above, it may be
+%    called without arguments; in this case, the last explicit set of
+%    arguments passed to it are used.
 
+    global BOT_LAST_ARGS
 
+    if nargin == 0
+        if isempty(BOT_LAST_ARGS)
+            args = {};
+        else
+            args = BOT_LAST_ARGS;
+        end
+        bot(args{:});
+        return;
+    end
 
     if ~exist('savesession', 'var')
         bot(inputdir, outputdir, false);
         return;
     end
+
+    BOT_LAST_ARGS = {inputdir, outputdir, savesession};
 
     tic
     run_pipeline(inputdir, outputdir, savesession);
