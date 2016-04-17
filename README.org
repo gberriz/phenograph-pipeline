@@ -1,18 +1,19 @@
 * main changes
 
-** fast_tsne
+  - the =fast_tsne= function now expects to be able to call a version
+    of the =bh_tsne= executable that supports the =no_dims= arguments
+    (see the *required compilation > =bh_tsne=* subsection below);
+    more specifically =fast_tsne= now has the following signature
 
-   - now has signature
+      #+begin_src matlab
+      fast_tsne(data, no_dims, initial_dims, perplexity, theta)
+      #+end_src
 
-     fast_tsne(data, no_dims, initial_dims, perplexity, theta, rand_seed)
+ - support for PRNG seeding
 
-   - expects to be able to call a version of bh_tsne that supports
-     no_dims (see bh_tsne compilation section below)
+ - new =cyt2/pipeline= directory
 
-** includes support for PRNG seeding
-
-** new pipeline directory
-   contains automated_analyzer.m, bot.m, and supporting files
+   contains =automated_analyzer.m=, =bot.m=, and supporting files
 
 
 * required compilation
@@ -27,34 +28,94 @@
 
 ** bh_tsne
 
-    - clone lvdmaaten/bhtsne
+    - clone =lvdmaaten/bhtsne=
 
-   #+begin_src sh
-    % git clone https://github.com/lvdmaaten/bhtsne
-   #+end_src
+      #+begin_src sh
+      % git clone https://github.com/lvdmaaten/bhtsne
+      #+end_src
 
-    - follow instructions in bhtsne/README.md for compiling bh_tsne
+    - follow compilation instructions in =bhtsne/README.md=
 
     - the resulting executable *must* be called either of the following
 
-      - bh_tsne
+      - =bh_tsne=
 
-      - bh_tsne_<ARCH>
+      - =bh_tsne_<ARCH>=
 
-      ...where `<ARCH>` is the string returned by the MATLAB
-      expression `computer('arch')` for your system.
+      ...where =<ARCH>= is the string returned by the MATLAB
+      expression =computer('arch')= for your system.
 
     - place executable in the directory
 
-   #+begin_src sh
+      #+begin_src sh
       cyt2/src/3rdparty/bhtsne/
-   #+end_src
+      #+end_src
 
-* setup
+* reproducibility test
 
-  After adding the cyt2 subdirectory to the MATLAB path, run the
-  command `setup`.  This command:
+** caveats
 
-  1. updates the MATLAB path to include all cyt2 directories,
-     including our pipeline directory;
-  2. initializes some global variables.
+   - the test described below assumes that you have a copy of GJB's
+     =moribund_analysys/*.fcs= files;
+
+   - the procedure described below is written for a Unix-based system
+     (Linux, OS X, etc.); some of the steps in it need to be adapted
+     in order to run the test on Windows.
+
+** procedure
+
+   To perform a "reproducibility test" comparing =automated_analyzer.m=
+   and =bot.m= do the following (replacing the items in =<...>= with the
+   appropriate values):
+
+   1. get the latest version of the =phenograph-pipeline= repo
+
+      1. if you don't have a local instance of the =phenograph-pipeline= 
+
+         #+begin_src sh
+         cd <YOUR_GIT_REPOS_DIRECTORY>
+         git clone https://github.com/gberriz/phenograph-pipeline
+         #+end_src
+
+         This will create a new directory,
+         =<YOUR_GIT_REPOS_DIRECTORY>/phenograph-pipeline=, which is
+         referred to as =<PATH_TO_PHENOGRAPH_PIPELINE_REPO>= in the
+         rest of these instructions.
+
+      2. if you already have a local instance of the =phenograph-pipeline= 
+
+         #+begin_src sh
+         cd <PATH_TO_PHENOGRAPH_PIPELINE_REPO>
+         git checkout master # needed only if your current branch is different
+                             # from master
+         git pull https://github.com/gberriz/phenograph-pipeline master
+         #+end_src
+
+   2. in MATLAB
+
+      #+begin_src matlab
+      addpath <PATH_TO_PHENOGRAPH_PIPELINE_REPO>/cyt2;
+      setup;
+      DEBUG_REPRODUCIBILITY = true;
+      DEV_MODE = true;  % optional; do this for a quick run on a small subset of the data
+      bot('<PATH_TO_DIRECTORY_CONTAINING_FCS_FILES>', '<PATH_TO_DESIRED_OUTPUT_DIRECTORY>/bot')
+      automated_analyzer
+      #+end_src
+
+      *IMPORTANT:* =bot= and =automated_analyzer= should be run in
+      the order shown above, because =bot= sets up some global
+      variables (namely =FCS_FILES=, =CMPDIR=, and =SAMPLE_SIZE=) that
+      =automated_analyzer= subsequently uses.  This ensures that both
+      programs use the same inputs, parent output directory, and
+      sample size, respectively.
+
+   3. in the shell
+
+      #+begin_src sh
+      cd <PATH_TO_DESIRED_OUTPUT_DIRECTORY>
+      diff -rq aut bot
+      #+end_src
+
+      Any output produced by the last command represents differences
+      between the results of the two pipeline scripts.  Therefore, no
+      output means success.
