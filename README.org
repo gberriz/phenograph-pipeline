@@ -1,8 +1,11 @@
+*NB:* All relative paths below are with respect to this repo's
+top-level directory.
+
 * main changes
 
   - the =fast_tsne= function now expects to be able to call a version
     of the =bh_tsne= executable that supports the =no_dims= arguments
-    (see the *required compilation > =bh_tsne=* subsection below);
+    (see the *required compilation > bh_tsne* subsection below);
     more specifically =fast_tsne= now has the following signature
 
       #+begin_src matlab
@@ -44,11 +47,7 @@
       ...where =<ARCH>= is the string returned by the MATLAB
       expression =computer('arch')= for your system.
 
-    - place executable in the directory
-
-      #+begin_src sh
-      cyt2/src/3rdparty/bhtsne/
-      #+end_src
+    - place executable in the directory =cyt2/src/3rdparty/bhtsne/=
 
 * reproducibility test
 
