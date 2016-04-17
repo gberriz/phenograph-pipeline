@@ -202,19 +202,11 @@ end
 % -----------------------------------------------------------------------------
 % data normalization
 
-function normalized = normalize_(data, dimension)
-    dimensionality = ndims(data);
+function normalized = normalize_(data)
+    repmat_args = {size(data, 1), 1};
 
-    if ~exist('dimension', 'var')
-        normalized = normalize_(data, dimensionality);
-        return;
-    end
-
-    repmat_args = num2cell(ones(1, dimensionality));
-    repmat_args{dimension} = size(data, dimension);
-
-    min_ = min(data, [], dimension);
-    max_ = max(data, [], dimension);
+    min_ = min(data, [], 1);
+    max_ = max(data, [], 1);
 
     base = repmat(min_, repmat_args{:});
     extent = repmat(max_ - min_, repmat_args{:});
@@ -449,7 +441,7 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
     % -------------------------------------------------------------------------
     function normalized_table = normalize_table(table_)
         data = table2array(table_(:, channel_columns));
-        normalized_data = normalize_(data, 1);
+        normalized_data = normalize_(data);
         normalized_table = replace_channel_columns(table_, normalized_data);
         normalized_table.GroupCount = ...
             100 * normalized_table.GroupCount/sum(normalized_table.GroupCount);
