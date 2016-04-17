@@ -571,9 +571,9 @@ function data_cluster_heat_map(selected_gates,gate_name)
         end
 
         marker_means_temp = marker_means;
-        marker_means = mynormalize(marker_means, 100);
+        marker_means = normalize_(marker_means);
         marker_means_temp(marker_means_temp<0)=0;
-        marker_means_temp = mynormalize(marker_means_temp, 100);
+        marker_means_temp = normalize_(marker_means_temp);
 
         %find percentage of cells belonging to each cluster
         cells_pr_cluster = 100 * countmember(clusters_in_sample,sessionData(gate_context,cluster_channel))/length(gate_context);
@@ -601,6 +601,15 @@ function data_cluster_heat_map(selected_gates,gate_name)
     write_data('truncated', data_str_out_2);
 
     data_str_out_2(:, end-6:end)
+end
+
+% -----------------------------------------------------------------------------
+function result = normalize_(data)
+    result = mynormalize(data, 100);
+    global DEBUG_REPRODUCIBILITY;
+    if ~DEBUG_REPRODUCIBILITY
+        result(isnan(result)) = 0;
+    end
 end
 
 function [] = maybe_create_dir(dir_)

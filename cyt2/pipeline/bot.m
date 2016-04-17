@@ -220,11 +220,6 @@ function normalized = normalize_(data, dimension)
     extent = repmat(max_ - min_, repmat_args{:});
 
     normalized = (data - base)./extent;
-
-    global DEBUG_REPRODUCIBILITY;
-    if DEBUG_REPRODUCIBILITY
-        normalized(isnan(normalized)) = 0;
-    end
 end
 
 % -----------------------------------------------------------------------------
