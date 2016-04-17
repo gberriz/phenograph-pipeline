@@ -91,9 +91,13 @@ end
 % sampling
 
 function sample = random_sample(k, n)
-    global DEBUG_REPRODUCIBILITY
-    if ~isempty(DEBUG_REPRODUCIBILITY) && DEBUG_REPRODUCIBILITY
-        sample = to_column(randsample(1:n, k));
+    global DEBUG_REPRODUCIBILITY;
+    if DEBUG_REPRODUCIBILITY
+        global PRNG_SEED;
+        global RANDSAMPLE_PRNG_SEED_OFFSET;
+        rng(PRNG_SEED + RANDSAMPLE_PRNG_SEED_OFFSET);
+
+        sample = sort(to_column(randsample(1:n, k)));
     else
         sample = partial_fisher_yates(k, n);
     end
@@ -369,16 +373,7 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
         error('sample size exceeds number of observations');
     end
 
-    global DEBUG_REPRODUCIBILITY;
-    if DEBUG_REPRODUCIBILITY
-        global PRNG_SEED;
-        global RANDSAMPLE_PRNG_SEED_OFFSET;
-        rng(PRNG_SEED + RANDSAMPLE_PRNG_SEED_OFFSET);
-        sample_indices = sort(random_sample(sample_size, ...
-                                            number_of_observations));
-    else
-        sample_indices = random_sample(sample_size, number_of_observations);
-    end
+    sample_indices = random_sample(sample_size, number_of_observations);
 
     sample = all_data(sample_indices, :);
     clear('all_data');
