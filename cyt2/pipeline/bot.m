@@ -120,16 +120,11 @@ function culled_relative_paths = cull_sources(relative_paths, ...
     groups = findgroups(table_.suffix, table_.prefix);
     width = max(splitapply(@numel, table_.index, groups));
 
-    function padded_cell = pad(indices)
-        padded_indices = [indices; nan(width - numel(indices), 1)];
-        padded_cell = num2cell(to_row(padded_indices));
+    function padded_indices = pad(indices)
+        padded_indices = [to_row(indices) nan(width - numel(indices), 1)];
     end
 
-    % using to_row, rather than to_column, for the initial linearization step
-    % produces the right ordering
-    indices_cell = to_row(splitapply(@pad, table_.index, groups));
-
-    indices = to_column(cell2mat(indices_cell));
+    indices = to_column(splitapply(@pad, table_.index, groups));
     indices(isnan(indices)) = [];
 
     culled_relative_paths = relative_paths(indices(1:maximum_number_of_paths));
