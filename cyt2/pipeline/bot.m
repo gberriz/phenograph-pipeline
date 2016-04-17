@@ -87,6 +87,54 @@ function [data, block_sizes, channel_names] = read_files(files)
                             'UniformOutput', false);
 end
 
+function culled_relative_paths = cull_sources(relative_paths, ...
+                                              maximum_number_of_paths)
+    number_of_paths = numel(relative_paths);
+    if number_of_paths <= maximum_number_of_paths
+        culled_relative_paths = relative_paths;
+        if number_of_paths < maximum_number_of_paths
+            terse_warning('only %d sources available', number_of_paths);
+        end
+        return;
+    end
+
+    function parts = parse(i)
+        relative_path = relative_paths{i};
+        [~, stem, ~] = fileparts(relative_path);
+        function part = check_match(match)
+            if ~isempty(match)
+                part = match{1};
+            else
+                part = stem;
+            end
+        end
+        prefix = check_match(regexpi(stem, '^([a-z]+)', 'match'));
+        suffix = check_match(regexpi(stem, '([a-z]+)$', 'match'));
+        parts = {prefix, suffix, i};
+    end
+
+    rows = arrayfun(@parse, 1:number_of_paths, 'UniformOutput', false);
+    table_ = cell2table(cat(1, rows{:}), ...
+                        'VariableNames', {'prefix', 'suffix', 'index'});
+
+    groups = findgroups(table_.suffix, table_.prefix);
+    width = max(splitapply(@numel, table_.index, groups));
+
+    function padded_cell = pad(indices)
+        padded_indices = [indices; nan(width - numel(indices), 1)];
+        padded_cell = num2cell(to_row(padded_indices));
+    end
+
+    % using to_row, rather than to_column, for the initial linearization step
+    % produces the right ordering
+    indices_cell = to_row(splitapply(@pad, table_.index, groups));
+
+    indices = to_column(cell2mat(indices_cell));
+    indices(isnan(indices)) = [];
+
+    culled_relative_paths = relative_paths(indices(1:maximum_number_of_paths));
+end
+
 % -----------------------------------------------------------------------------
 % output
 
@@ -352,8 +400,8 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
 
     relative_paths = get_files(inputdir);
     if DEV_MODE
-        relative_paths = relative_paths([1 2 21 22]);
-        % relative_paths = relative_paths([1 21]);
+        % relative_paths = cull_sources(relative_paths, 2);
+        relative_paths = cull_sources(relative_paths, 4);
     end
 
     files = cellfun(@(r) fullfile(inputdir, r), relative_paths, ...
