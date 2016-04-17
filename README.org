@@ -15,7 +15,6 @@
 
    contains =automated_analyzer.m=, =bot.m=, and supporting files
 
-
 * required compilation
 
 ** phenograph
@@ -55,8 +54,9 @@
 
 ** caveats
 
-   - the test described below assumes that you have a copy of GJB's
-     =moribund_analysys/*.fcs= files;
+   - the test described below assumes that you have a collection of
+     =*.fcs= files (ideally, a copy of GJB's =moribund_analysys/*.fcs=
+     files), located under a single directory;
 
    - the procedure described below is written for a Unix-based system
      (Linux, OS X, etc.); some of the steps in it need to be adapted
@@ -108,6 +108,13 @@
       =automated_analyzer= subsequently uses.  This ensures that both
       programs use the same inputs, parent output directory, and
       sample size, respectively.
+
+      *NB:* the =DEV_MODE= feature currently works best for GJB's
+      =moribund_analysys/*.fcs= file set; in particular, the algorithm
+      that chooses a small subset of these files relies on their
+      names' structure; things are likely to go wrong if the set of
+      input files includes ones with some other very different name
+      structure.
 
    3. in the shell
 
