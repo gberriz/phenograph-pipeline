@@ -26,7 +26,7 @@ function automated_analyzer
             if isempty(DEFAULT_PRNG_SEED)
                 error('no PRNG seed available');
             else
-                PRNG_SEED=DEFAULT_PRNG_SEED;
+                PRNG_SEED = DEFAULT_PRNG_SEED;
             end
         end
         warning('PRNG_SEED: %d', PRNG_SEED);

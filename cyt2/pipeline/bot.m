@@ -383,7 +383,7 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
             if isempty(DEFAULT_PRNG_SEED)
                 error('no PRNG seed available');
             else
-                PRNG_SEED=DEFAULT_PRNG_SEED;
+                PRNG_SEED = DEFAULT_PRNG_SEED;
             end
         end
         terse_warning('PRNG_SEED: %d', PRNG_SEED);
