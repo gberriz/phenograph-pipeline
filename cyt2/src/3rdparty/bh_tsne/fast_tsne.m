@@ -177,7 +177,7 @@ function write_data(data, no_dims, theta, perplexity, rand_seed)
     fwrite(outstream, no_dims, 'integer*4');
     fwrite(outstream, data', 'double');
 
-    if ~isempty(rand_seed)
+    if exist('rand_seed', 'var') && ~isempty(rand_seed)
         fwrite(outstream, rand_seed, 'integer*4');
     end
 
