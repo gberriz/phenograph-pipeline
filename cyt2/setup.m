@@ -27,6 +27,9 @@ TSNE_PRNG_SEED_OFFSET = 1;
 global PHENOGRAPH_PRNG_SEED_OFFSET;
 PHENOGRAPH_PRNG_SEED_OFFSET = 2;
 
+global DEFAULT_OUTPUTDIR;
+DEFAULT_OUTPUTDIR = fullfile(tempdir, 'phenograph-pipeline', 'cmp');
+
 global DIAGNOSTICS_DIR;
 DIAGNOSTICS_DIR = fullfile(tempdir, 'cyt2', 'diagnostics');
 if ~exist(DIAGNOSTICS_DIR, 'dir')
