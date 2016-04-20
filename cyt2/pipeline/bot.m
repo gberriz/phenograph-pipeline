@@ -318,10 +318,15 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
 
     % -------------------------------------------------------------------------
 
-    relative_paths = get_files(inputdir);
     if DEV_MODE
-        % relative_paths = cull_sources(relative_paths, 2);
-        relative_paths = cull_sources(relative_paths, 4);
+        global RELATIVE_PATHS;
+        if wehave(RELATIVE_PATHS)
+            relative_paths = RELATIVE_PATHS;
+        else
+            relative_paths = cull_sources(get_files(inputdir), 4);
+        end
+    else
+        relative_paths = get_files(inputdir);
     end
 
     files = cellfun(@(r) fullfile(inputdir, r), relative_paths, ...
@@ -342,8 +347,9 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
     number_of_sources = numel(files);
 
     if DEV_MODE
-        % sample_size = 11 * number_of_sources;
-        sample_size = 100 * number_of_sources;
+        global SAMPLE_SIZE;
+        assert(wehave(SAMPLE_SIZE));
+        sample_size = SAMPLE_SIZE;
     else
         sample_size = 100000;
     end
