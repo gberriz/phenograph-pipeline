@@ -594,7 +594,7 @@ function data_cluster_heat_map(selected_gates,gate_name)
 
     function [] = write_data(subdir, data)
         outputpath = fullfile(OUTPUTDIR, subdir, [gate_name '.tsv']);
-        save_to_tsv(outputpath, data);
+        save_to_tsv_(outputpath, data);
     end
 
     write_data('full',      data_str_out  );
@@ -611,14 +611,6 @@ function result = normalize_(data)
         result(isnan(result)) = 0;
     end
 end
-
-function [] = maybe_create_dir(dir_)
-    [status, message, ~] = mkdir(dir_);
-    if status == 0 % sic
-        error(message);
-    end
-end
-
 
 function [valid_names, modified] = make_valid_names(names)
     whitespace_free_names = cellfun(@(s) regexprep(s, '\s+', '?'), names, ...
@@ -649,9 +641,7 @@ function data_as_table = cell_to_table(data_as_cell)
         cell2table(data_rows, 'VariableNames', make_valid_names(header_row));
 end
 
-function [] = save_to_tsv(path_, data_as_cell)
+function [] = save_to_tsv_(path_, data_as_cell)
     data_as_table = cell_to_table(data_as_cell);
-    [dirname, ~, ~] = fileparts(path_);
-    maybe_create_dir(dirname);
-    writetable(data_as_table, path_, 'Delimiter', '\t', 'FileType', 'text');
+    save_to_tsv(path_, data_as_table);
 end
