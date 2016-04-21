@@ -238,6 +238,14 @@ function sources_table = make_sources_table(block_sizes, data_indices)
                           'VariableNames', {'source'});
 end
 
+function tsne_table = make_tsne_table(tsne_mapping)
+    variable_names = arrayfun(@(i) sprintf('bh_SNE%d', i), ...
+                              1:size(tsne_mapping, 2), ...
+                              'UniformOutput', false);
+
+    tsne_table = array_to_table(tsne_mapping, variable_names);
+end
+
 function tsne_table = run_tsne(data)
 
     number_of_observations = size(data, 1);
@@ -257,11 +265,11 @@ function tsne_table = run_tsne(data)
     tsne_mapping = fast_tsne(data, [], initial_dims, perplexity);
 
     % -------------------------------------------------------------------------
-    variable_names = arrayfun(@(i) sprintf('bh_SNE%d', i), ...
-                              1:size(tsne_mapping, 2), ...
-                              'UniformOutput', false);
+    tsne_table = make_tsne_table(tsne_mapping);
+end
 
-    tsne_table = array_to_table(tsne_mapping, variable_names);
+function tsne_table = skip_tsne(data)
+    tsne_table = make_tsne_table(nan(size(data, 1), 2));
 end
 
 function phenograph_table = run_phenograph(data)
@@ -383,7 +391,8 @@ function [] = run_pipeline(inputdir, outputdir, samplesize, savesession)
 
     sources_table = make_sources_table(block_sizes, indices);
 
-    tsne_table = run_tsne(data);
+    % tsne_table = run_tsne(data);
+    tsne_table = skip_tsne(data);
 
     % -------------------------------------------------------------------------
     all_tables = {sources_table, channels_table, tsne_table, phenograph_table};
