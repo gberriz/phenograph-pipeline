@@ -1,4 +1,4 @@
-function [] = bot(inputdir, outputdir, savesession)
+function [] = bot(inputdir, outputdir, samplesize, savesession)
 %BOT run PhenoGraph pipeline on a collection of files
 %
 %    BOT(INPUTDIR, OUTPUTDIR) locates all the *.fcs files under INPUTDIR, uses
@@ -10,12 +10,16 @@ function [] = bot(inputdir, outputdir, savesession)
 %    that of INPUTDIR, except that all the files will have extension .tsv
 %    instead of .fcs.  (Files INPUTDIR that don't match *.fcs are ignored.)
 %
-%    BOT(INPUTDIR, OUTPUTDIR, true), in addition, results in having the current
-%    MATLAB session saved in the file matlab_session.mat, under OUTPUTDIR.
+%    BOT(INPUTDIR, OUTPUTDIR, SAMPLESIZE) behaves similarly, but runs PhenoGraph
+%    on a size-SAMPLESIZE random sample of the input data.
 %
-%    After calling either one of the forms of BOT shown above, it may be
-%    called without arguments; in this case, the last explicit set of
-%    arguments passed to it are used.
+%    BOT(INPUTDIR, OUTPUTDIR, SAMPLESIZE, true), in addition, results in having
+%    the current MATLAB session saved in the file matlab_session.mat, under
+%    OUTPUTDIR.
+%
+%    After calling any one of the forms of BOT shown above, it may be called
+%    without arguments; in this case, the last explicit set of arguments passed
+%    to it are used.
 
     global BOT_LAST_ARGS
 
@@ -30,14 +34,18 @@ function [] = bot(inputdir, outputdir, savesession)
     end
 
     if ~exist('savesession', 'var')
-        bot(inputdir, outputdir, false);
+        if ~exist('samplesize', 'var')
+            bot(inputdir, outputdir, [], false);
+        else
+            bot(inputdir, outputdir, samplesize, false);
+        end
         return;
     end
 
-    BOT_LAST_ARGS = {inputdir, outputdir, savesession};
+    BOT_LAST_ARGS = {inputdir, outputdir, samplesize, savesession};
 
     tic
-    run_pipeline(inputdir, outputdir, savesession);
+    run_pipeline(inputdir, outputdir, samplesize, savesession);
     toc
 end
 
@@ -208,16 +216,24 @@ function channels_table = make_channels_table(data)
     channels_table = array_to_table(data, channel_columns);
 end
 
-function sources_table = make_sources_table(block_sizes, sample_indices)
-    block_indices = 1:numel(block_sizes);
+function sources_table = make_sources_table(block_sizes, data_indices)
+
+    number_of_sources = numel(block_sizes);
+    block_indices = 1:number_of_sources;
     % letters = 'A':'Z';
     % block_values = letters(block_indices);
 
-    observation_index_to_source_index = make_mapper(block_sizes, block_indices);
+    if wehave(data_indices)
+        observation_index_to_source_index = make_mapper(block_sizes, ...
+                                                        block_indices);
 
-    source_indices = arrayfun(@(i) observation_index_to_source_index(i), ...
-                            sample_indices);
-
+        source_indices = arrayfun(@(i) observation_index_to_source_index(i), ...
+                                  to_column(data_indices));
+    else
+        blocks = arrayfun(@(i) i * ones(block_sizes(i), 1), ...
+                          to_column(block_indices));
+        sources_indices = cat(1, blocks{:});
+    end
     sources_table = table(categorical(source_indices), ...
                           'VariableNames', {'source'});
 end
@@ -297,7 +313,7 @@ end
 % -----------------------------------------------------------------------------
 % main routine
 
-function [] = run_pipeline(inputdir, outputdir, savesession)
+function [] = run_pipeline(inputdir, outputdir, samplesize, savesession)
 
     global DEV_MODE;
     global DEBUG_REPRODUCIBILITY;
@@ -346,36 +362,29 @@ function [] = run_pipeline(inputdir, outputdir, savesession)
     number_of_observations = size(all_data, 1);
     number_of_sources = numel(files);
 
-    if DEV_MODE
-        global SAMPLE_SIZE;
-        assert(wehave(SAMPLE_SIZE));
-        sample_size = SAMPLE_SIZE;
+    if wehave(samplesize)
+        if samplesize > number_of_observations
+            error('sample size exceeds number of observations');
+        end
+
+        indices = random_sample(samplesize, number_of_observations);
+        data = all_data(indices, :);
     else
-        sample_size = 100000;
+        indices = [];
+        data = all_data;
     end
 
-    if DEBUG_REPRODUCIBILITY
-        global SAMPLE_SIZE;
-        SAMPLE_SIZE = sample_size;
-    end
-
-    if sample_size > number_of_observations
-        error('sample size exceeds number of observations');
-    end
-
-    sample_indices = random_sample(sample_size, number_of_observations);
-
-    sample = all_data(sample_indices, :);
     clear('all_data');
 
     % -------------------------------------------------------------------------
-    channels_table = make_channels_table(sample);
+    phenograph_table = run_phenograph(data);
 
-    sources_table = make_sources_table(block_sizes, sample_indices);
+    channels_table = make_channels_table(data);
 
-    tsne_table = run_tsne(sample);
+    sources_table = make_sources_table(block_sizes, indices);
 
-    phenograph_table = run_phenograph(sample);
+    tsne_table = run_tsne(data);
+
     % -------------------------------------------------------------------------
     all_tables = {sources_table, channels_table, tsne_table, phenograph_table};
 
