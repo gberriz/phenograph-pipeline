@@ -95,17 +95,15 @@ function [] = save_all(outputdir, relative_paths, all_tables, channel_names, ...
             % -----------------------------------------------------------------
             global DEBUG_REPRODUCIBILITY;
             if bool(DEBUG_REPRODUCIBILITY) || isempty(channel_names)
-                subtable_to_save = normalized_subtable;
                 wanted_columns = [channel_columns 'percentage' 'cluster'];
+                subtable_to_save = normalized_subtable(:, wanted_columns);
             else
                 subtable_to_save = ...
                     rename_channel_columns(normalized_subtable, ...
                                            channel_names{i});
-                wanted_columns = ['cluster' 'percentage' channel_columns ...
-                                  tsne_table.Properties.VariableNames];
             end
 
-            save_to_tsv(outputpath, subtable_to_save(:, wanted_columns));
+            save_to_tsv(outputpath, subtable_to_save);
         end
 
     end
