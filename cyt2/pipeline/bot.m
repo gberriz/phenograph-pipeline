@@ -210,7 +210,7 @@ end
 
 function channels_table = make_channels_table(data)
     width = size(data, 2);
-    format = sprintf('ch%%0%dd', floor(log10(width)) + 1);
+    format = indexed_format('ch', width);
     channel_columns = arrayfun(@(i) sprintf(format, i), 1:width, ...
                                'UniformOutput', false);
     channels_table = array_to_table(data, channel_columns);
