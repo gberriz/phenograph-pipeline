@@ -11,7 +11,8 @@ function [] = bot(inputdir, outputdir, samplesize, savesession)
 %    instead of .fcs.  (Files INPUTDIR that don't match *.fcs are ignored.)
 %
 %    BOT(INPUTDIR, OUTPUTDIR, SAMPLESIZE) behaves similarly, but runs PhenoGraph
-%    on a size-SAMPLESIZE random sample of the input data.
+%    on a size-SAMPLESIZE random sample of the input data.  The PhenoGraph
+%    parameters used are: neighbors = 20, distance = mahalanobis.
 %
 %    BOT(INPUTDIR, OUTPUTDIR, SAMPLESIZE, true), in addition, results in having
 %    the current MATLAB session saved in the file matlab_session.mat, under
